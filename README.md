@@ -12,7 +12,7 @@
   
   <img src="https://img.shields.io/github/last-commit/mr-binu-bb/Google-Dorks-Warfare" />
   
-  <img src="https://visitor-badge.glitch.me/badge?page_id=mr-binu-bb/Google-Dorks-Warfare" />
+  
 </p>
 
 ---
