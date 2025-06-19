@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GOOGLE DORKS WARFARE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Share Tech Mono';
+      background: #000;
+      color: #0f0;
+      display: flex;
+      height: 100vh;
+    }
+    .matrix {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.05;
+      z-index: -1;
+    }
+    #sidebar {
+      width: 300px;
+      background: #111;
+      padding: 10px;
+      border-right: 1px solid #0f0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #main {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    input, textarea {
+      padding: 5px;
+      background: #000;
+      color: #0f0;
+      border: 1px solid #0f0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      background: transparent;
+      border: 1px solid #0f0;
+      color: #0f0;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0f0;
+      color: #000;
+    }
+    #topbar {
+      display: flex;
+      gap: 8px;
+      padding: 8px;
+      flex-wrap: wrap;
+    }
+    #buttons {
+      margin: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    #console {
+      background: rgba(0, 0, 0, 0.8);
+      margin: 10px;
+      padding: 5px;
+      height: 200px;
+      overflow-y: auto;
+      border: 1px solid #0f0;
+      font-size: 12px;
+    }
+    footer {
+      text-align: center;
+      padding: 10px;
+      border-top: 1px solid #0f0;
+    }
+  </style>
+</head>
+<body>
+<canvas class="matrix" id="m"></canvas>
+
+<!-- Sidebar -->
+<div id="sidebar">
+  <input id="targetInput" placeholder="Enter target.com">
+
+  <textarea id="customDork" rows="3" placeholder="Enter custom dork here..."></textarea>
+  <button onclick="runCustom()">Run Custom Dork</button>
+
+  <hr style="border:1px dashed #0f0;">
+
+  <input type="file" id="dorkFile" onchange="handleFile(event)">
+  <textarea id="uploadedDorks" rows="10" placeholder="Uploaded dorks will appear here..."></textarea>
+  <button onclick="runUploaded()">Run Uploaded Dorks</button>
+</div>
+
+<!-- Main UI -->
+<div id="main">
+  <div id="topbar">
+    <input id="t" placeholder="target.com (no https://)" autocomplete="off"/>
+    <button onclick="toggle()">Toggle Theme</button>
+    <button onclick="copyLast()">Copy Last Query</button>
+    <button onclick="exportLog()">Export Log</button>
+    <button onclick="runAll()">Run All</button>
+  </div>
+
+  <div id="buttons"></div>
+  <div id="console"></div>
+  <footer>🌸...MADE BY MR BINU (ẞẞ)....🌸</footer>
+</div>
+
+<script>
+const dorks = [
+   ["SQL Error", 'intext:"sql syntax near" | intext:"Warning: mysql_query"'],  
+  ["SQL Injection", 'inurl:"?id=" intext:"mysql_fetch"'],  
+  ["Open Redirect", 'inurl:redirect= | inurl:return= | inurl:url='],  
+  ["SSRF Probe", 'inurl:next=http:// | inurl:url=http://'],  
+  ["XSS", 'intext:"<script>alert(1)"'],  
+  ["Admin Panel", 'inurl:admin | inurl:login'],  
+  ["WP-Login", 'inurl:wp-login.php'],  
+  ["Drupal Login", 'inurl:user intitle:Drupal intext:"Log in"'],  
+  ["Joomla Admin", 'inurl:administrator'],  
+  ["Backup", 'ext:bak | ext:backup | ext:old'],  
+  ["Config Files", 'ext:conf | ext:ini | ext:cfg'],  
+  ["wp-config", 'intitle:"index of" wp-config.php'],  
+  [".env", 'inurl:.env | ext:env'],  
+  [".git", 'inurl:/.git | intitle:"Index of /.git"'],  
+  ["Docker YML", 'intitle:"index of" docker-compose.yml'],  
+  ["phpinfo", 'intitle:"phpinfo()" "published by the PHP Group"'],  
+  ["XMLRPC", 'inurl:xmlrpc.php'],  
+  ["DB Dumps", 'ext:sql | ext:dbf | ext:mdb'],  
+  ["Log Files", 'ext:log | ext:txt'],  
+  ["CSV Files", 'ext:csv'],  
+  ["Public Docs", 'ext:doc | ext:pdf | ext:xls | ext:ppt'],  
+  ["Subdomains", 'site:*.TARGET'],  
+  ["Sub-Subdomains", 'site:*.*.TARGET'],  
+  ["Backup ZIP", 'ext:zip | ext:tar | ext:gz'],  
+  ["JWT Leak", 'intext:"eyJ[0-9a-zA-Z_\\-]"'],  
+  ["OAuth Leak", 'inurl:token='],  
+  ["Credentials", 'intext:"username" intext:"password"'],  
+  ["Debug Page", 'inurl:debug'],  
+  ["Error Pages", 'intext:"Error on line"'],  
+  ["404 Leak", 'intext:"Not Found" site:TARGET'],  
+  ["Index of passwd", 'intitle:"Index of" passwd'],  
+  ["Exposed .env Secrets", 'intext:"DB_PASSWORD=" ext:env'],  
+  ["Confidential PDFs", 'ext:pdf intext:confidential'],  
+  ["Log Errors", 'ext:log intext:error'],  
+  ["Admin Login", 'inurl:login intext:"admin"'],  
+  ["Apache Default Page", 'intitle:"Apache2 Ubuntu Default Page"'],  
+  ["Index of Backup", 'inttitle:"Index of /backup"'],  
+  ["Index of Config", 'inttitle:"Index of /config"'],  
+  ["API Keys", 'intext:"api_key="'],  
+  ["Authorization Tokens", 'intext:"Authorization: Bearer"'],  
+  ["Exposed Keys", 'intext:"private_key" | intext:"BEGIN RSA PRIVATE KEY"'],  
+  ["Payment Info", 'ext:csv intext:credit'],  
+  ["Leaked Password Files", 'intitle:"Index of" intext:password'],  
+  ["Firebase Exposed", 'inurl:.firebaseio.com'],  
+  ["Open Directories", 'intitle:"Index of /"'],  
+  ["Sensitive PDFs", 'ext:pdf intext:"not for distribution"'],  
+  ["Leaked JWT Tokens", 'intext:"eyJ0eXAiOiJKV1QiLCJhbGci"'],  
+  ["Configuration Exposure", 'ext:json intext:"password"'],  
+  ["PHP Source", 'ext:php intext:"db_password"'],  
+  ["INI Leaks", 'ext:ini intext:"user=" intext:"password="'],  
+  ["YAML Secrets", 'ext:yml | ext:yaml intext:"secret:"'],  
+  ["GIT Credentials", 'inurl:.git/config'],  
+  ["MySQL Dumps", 'filetype:sql "insert into"'],  
+  ["Sensitive XLSX", 'ext:xlsx intext:confidential'],  
+  ["Email Dumps", 'filetype:txt intext:"@gmail.com"'],  
+  ["RCE Indicators", 'intext:"system(" filetype:php'],  
+  ["Config XML", 'filetype:xml intext:"config"'],  
+  ["Default Credentials", 'intext:"default password" | intext:"default credentials"'],  
+  [".htpasswd Files", 'inurl:.htpasswd'],  
+  [".bash_history", 'intitle:"index of" ".bash_history"'],  
+  ["AWS Keys", 'intext:"AKIA" ext:txt | ext:env'],  
+  ["Google API Key", 'intext:"AIza" ext:txt | ext:env'],  
+  ["Azure SAS", 'intext:"?sv=" ext:env | ext:json'],  
+  ["Kubernetes Secrets", 'filetype:yaml secret: '],  
+  ["Docker Env Leak", 'intext:"ENV " ext:dockerfile'],  
+  ["GCP Service Account", 'intext:"--format=json" ext:json'],  
+  ["Bitbucket-Repo", 'site:bitbucket.org TARGET'],  
+  ["GitHub-Token", 'intext:"ghp_" ext:txt | ext:env'],  
+  ["CircleCI Tokens", 'intext:"CIRCLE_TOKEN=" ext:env'],  
+  ["Travis CI", 'intext:"TRAVIS" ext:env | ext:yaml'],  
+  ["Heroku API", 'intext:"HEROKU_API_KEY"'],  
+  ["Netlify Vault", 'intext:"NETLIFY_AUTH_TOKEN"'],  
+  ["Slack Token", 'intext:"xoxb-" ext:txt'],  
+  ["Stripe Key", 'intext:"sk_live_" ext:txt'],  
+  ["Database URL", 'intext:"postgres://" ext:env'],  
+  ["Redis URL", 'intext:"redis://" ext:env'],  
+  ["Jenkins Config", 'inurl:"jenkins" ext:xml'],  
+  ["GitLab CI", 'inurl:".gitlab-ci.yml"'],  
+  ["Azure DevOps", 'inurl:"ADO_BUILD_TOKEN" ext:env'],  
+  ["Terraform State", 'ext:tfstate site:TARGET'],  
+  ["Backup .tar.gz", 'filetype:tar.gz "backup"'],  
+  ["Web.Config", 'filetype:config "web.config"'],  
+  ["Tomcat Manager", 'inurl:"manager/html"'],  
+  ["SVN Repo", 'inurl:".svn/"'],  
+  ["SVN Password", 'filetype:xml "svn:password"'],  
+  ["CVS Repository", 'inurl:"CVS/"'],  
+  ["ElasticSearch Open", 'inurl:"/_search?pretty"'],  
+  ["MongoDB Open", 'inurl:"/_mongo/"'],  
+  ["RabbitMQ Admin", 'inurl:"rabbitmq"'],  
+  ["FTP Anonymous", 'intitle:"Index of /" "ftp"'],  
+  ["SMB Share", 'inurl:"smb://"'],  
+  ["VNC Open", 'inurl:":5900"'],  
+  ["Open Telnet", 'inurl:":23"'],  
+  ["phpMyAdmin", 'inurl:"phpMyAdmin"'],  
+  ["Cron Jobs", 'intext:"crontab" ext:txt'],  
+  ["Server Pages", 'filetype:jsp intext:"<%@"'],  
+  ["ASPX Config", 'filetype:aspx intext:"web.config"'],  
+  ["Ruby on Rails", 'inurl:"rails/info/properties"'],  
+  ["Django Debug", 'inurl:"__debug__"'],  
+  ["Framework Info", 'inurl:"/info.php"'],  
+  ["Adminer Panel", 'inurl:"adminer.php"'],  
+  ["Grafana Dash", 'inurl:"grafana/d/"'],  
+  ["Kibana Dash", 'inurl:"kibana/app/kibana"'],  
+  ["Logstash Config", 'filetype:conf logstash'],  
+  ["Consul UI", 'inurl:"/ui/dc/"'],  
+  ["Vault UI", 'inurl:"/ui/vault/"'],  
+  ["Prometheus UI", 'inurl:"/graph" "prometheus"'],  
+  ["Node-RED Flow", 'filetype:json "flows.json"'],  
+  ["Swagger API", 'inurl:"swagger-ui"'],  
+  ["OpenAPI Spec", 'filetype:yaml inurl:"openapi"'],  
+  ["SoapUI Files", 'filetype:xml "soapui"'],  
+  ["WSDL Leak", 'filetype:wsdl'],  
+  ["WordPress XMLRPC", 'inurl:xmlrpc.php?rsd'],  
+  ["Magento Admin", 'inurl:"admin/dashboard/index"'],  
+  ["Drupal Backdoor", 'intext:"drupal_settings" ext:php'],  
+  ["Magento Cron", 'intext:"cron.php" site:TARGET'],  
+  ["OpenCart Admin", 'inurl:"admin/index.php?route="'],  
+  ["Prestashop Admin", 'inurl:"admin" "Prestashop"'],  
+  ["TYPO3 Login", 'inurl:"typo3/login.php"'],  
+  ["Liferay Portal", 'inurl:"/c/portal/login"'],  
+  ["SharePoint Config", 'intext:"SPWebConfig" ext:config'],  
+  ["Oracle EM Console", 'inurl:":7001/em"'],  
+  ["WebLogic Admin", 'inurl:"/console/login/LoginForm.jsp"'],  
+  ["JBoss Console", 'inurl:"/jmx-console"'],  
+  ["GlassFish Admin", 'inurl:"/admin/index.jsf"'],  
+  ["SAP NetWeaver", 'inurl:"/irj/portal"'],  
+  ["Salesforce Chatter", 'inurl:"/ui/core/uiComponent"',  
+  ],  
+  ["Zoom Config", 'intext:"zoom.us REST API"'],  
+  ["Microsoft IIS", 'inurl:"/iisstart.htm"'],  
+  ["SQL Server Config", 'filetype:ini "MSSQLServer"'],  
+  ["ColdFusion Admin", 'inurl:"/CFIDE/administrator"'],  
+  ["Zend Framework", 'inurl:"Zend_Auth_Bar"'],  
+  ["TYPO3 Config", 'filetype:txt "TYPO3_CONF_VARS"'],  
+  ["React Devtools", 'inurl:"__REACT_DEVTOOLS_GLOBAL_HOOK__"'],  
+  ["Angular Debug", 'intext:"ng.probe"'],  
+  ["Vue Devtools", 'intext:"__VUE_DEVTOOLS_GLOBAL_HOOK__"'],  
+  ["WebSocket Endpoints", 'inurl:"/ws" OR inurl:"/socket.io"'],  
+  ["Server Status", 'inurl:"server-status"'],  
+  ["License Files", 'filetype:lic ext:LICENSE.txt'],  
+  ["Readme Files", 'filetype:md intext:"# README"'],  
+  ["Changelog", 'filetype:md intext:"## Changelog"'],  
+  ["Dockerfile", 'inurl:"Dockerfile"'],  
+  ["Expose Ports", 'inurl:":8080" OR inurl:":3000"'],  
+  ["Vulnerability Reports", 'filetype:pdf intext:"vulnerability"']  
+];
+
+let last = '', logEntries = [];
+
+function init() {
+  const btnDiv = document.getElementById('buttons');
+  dorks.forEach((d, i) => {
+    const b = document.createElement('button');
+    b.textContent = d[0];
+    b.onclick = () => run(i);
+    btnDiv.appendChild(b);
+  });
+}
+
+function run(i) {
+  const T = document.getElementById('t').value.trim();
+  if (!T) return alert("Enter target!");
+  const q = dorks[i][1].replace(/TARGET/g, T);
+  const url = "https://www.google.com/search?q=" + encodeURIComponent("site:" + T + " " + q);
+  window.open(url, '_blank');
+  last = url;
+  logEntries.push([new Date().toISOString(), dorks[i][0], url]);
+  appendLog(`Ran: ${dorks[i][0]}`);
+}
+
+function appendLog(txt) {
+  const c = document.getElementById('console');
+  c.innerHTML += `<div>${txt}</div>`;
+  c.scrollTop = c.scrollHeight;
+}
+
+function copyLast() {
+  if (!last) return alert("No query to copy!");
+  navigator.clipboard.writeText(last);
+  appendLog("Copied last query");
+}
+
+function exportLog() {
+  if (!logEntries.length) return alert("No log to export!");
+  let csv = 'time,query,url\\n' + logEntries.map(r => r.join(',')).join('\\n');
+  const a = document.createElement('a'), blob = new Blob([csv], { type: 'text/csv' });
+  a.href = URL.createObjectURL(blob);
+  a.download = "log.csv";
+  a.click();
+}
+
+function toggle() {
+  document.body.style.filter = document.body.style.filter ? "" : "invert(1)";
+  appendLog("Toggled theme");
+}
+
+function runAll() {
+  const T = document.getElementById('t').value.trim();
+  if (!T) return alert("Enter target!");
+  let delay = 0;
+  dorks.forEach((d, i) => {
+    setTimeout(() => run(i), delay);
+    delay += 500;
+  });
+}
+
+// 🧠 Sidebar Scripts
+function runCustom() {
+  const target = document.getElementById('targetInput').value.trim();
+  const customDork = document.getElementById('customDork').value.trim();
+  if (!target || !customDork) return alert("Missing target or dork!");
+
+  const query = customDork.replace(/TARGET/g, target);
+  const url = "https://www.google.com/search?q=" + encodeURIComponent("site:" + target + " " + query);
+  window.open(url, "_blank");
+  appendLog("Custom dork ran: " + customDork);
+}
+
+function handleFile(event) {
+  const file = event.target.files[0];
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    document.getElementById('uploadedDorks').value = e.target.result;
+    appendLog("Dork file loaded.");
+  };
+  reader.readAsText(file);
+}
+
+function runUploaded() {
+  const target = document.getElementById('targetInput').value.trim();
+  const dorksText = document.getElementById('uploadedDorks').value.trim();
+  if (!target || !dorksText) return alert("Missing data!");
+  const lines = dorksText.split('\\n');
+  lines.forEach(line => {
+    const q = line.trim().replace(/TARGET/g, target);
+    if (q) {
+      const url = "https://www.google.com/search?q=" + encodeURIComponent("site:" + target + " " + q);
+      window.open(url, "_blank");
+      appendLog("Ran file dork: " + line);
+    }
+  });
+}
+
+window.onload = init;
+
+// Matrix background
+let c = document.getElementById("m");
+c.width = innerWidth; c.height = innerHeight;
+let ctx = c.getContext("2d");
+let cols = Math.floor(c.width / 20), drops = Array(cols).fill(1);
+function draw() {
+  ctx.fillStyle = "rgba(0,0,0,0.05)";
+  ctx.fillRect(0, 0, c.width, c.height);
+  ctx.fillStyle = "#0f0";
+  ctx.font = "16px monospace";
+  for (let i = 0; i < cols; i++) {
+    ctx.fillText(Math.random() > 0.5 ? "0" : "1", i * 20, drops[i] * 20);
+    if (drops[i] * 20 > c.height && Math.random() > 0.975) drops[i] = 0;
+    drops[i]++;
+  }
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>
