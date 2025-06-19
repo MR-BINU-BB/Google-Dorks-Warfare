@@ -11,7 +11,9 @@
   <img src="https://img.shields.io/github/forks/mr-binu-bb/Google-Dorks-Warfare?style=social" />
   
   <img src="https://img.shields.io/github/last-commit/mr-binu-bb/Google-Dorks-Warfare" />
-  
+
+  ![Visitors](https://img.shields.io/badge/visitors-1.3k-blue)
+
   
 </p>
 
