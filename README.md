@@ -3,6 +3,14 @@
 
 > "Turn Google into your hacking weapon. Dork smart. Dork stealthy." — 🦅
 
+<p align="center">
+  <img src="https://img.shields.io/badge/License-MIT-green.svg" />
+  <img src="https://img.shields.io/github/stars/mr-binu-bb/Google-Dorks-Warfare?style=social" />
+  <img src="https://img.shields.io/github/forks/mr-binu-bb/Google-Dorks-Warfare?style=social" />
+  <img src="https://img.shields.io/github/last-commit/mr-binu-bb/Google-Dorks-Warfare" />
+  <img src="https://visitor-badge.glitch.me/badge?page_id=mr-binu-bb.Google-Dorks-Warfare" />
+</p>
+
 ---
 
 ## 🌐 LIVE DEMO
