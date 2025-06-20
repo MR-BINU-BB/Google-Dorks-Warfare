@@ -328,8 +328,9 @@ function runAll() {
 
 // 🧠 Sidebar Scripts
 function runCustom() {
-  const target = document.getElementById('targetInput').value.trim();
-  const customDork = document.getElementById('customDork').value.trim();
+  const target = sanitizeInput(document.getElementById('targetInput').value.trim());
+  const customDork = sanitizeInput(document.getElementById('customDork').value.trim());
+
   if (!target || !customDork) return alert("Missing target or dork!");
 
   const query = customDork.replace(/TARGET/g, target);
@@ -349,19 +350,29 @@ function handleFile(event) {
 }
 
 function runUploaded() {
-  const target = document.getElementById('targetInput').value.trim();
+  const target = sanitizeInput(document.getElementById('targetInput').value.trim());
   const dorksText = document.getElementById('uploadedDorks').value.trim();
   if (!target || !dorksText) return alert("Missing data!");
+
   const lines = dorksText.split('\\n');
   lines.forEach(line => {
-    const q = line.trim().replace(/TARGET/g, target);
-    if (q) {
-      const url = "https://www.google.com/search?q=" + encodeURIComponent("site:" + target + " " + q);
+    const sanitizedLine = sanitizeInput(line.trim()).replace(/TARGET/g, target);
+    if (sanitizedLine) {
+      const url = "https://www.google.com/search?q=" + encodeURIComponent("site:" + target + " " + sanitizedLine);
       window.open(url, "_blank");
-      appendLog("Ran file dork: " + line);
+      appendLog("Ran file dork: " + sanitizedLine);
     }
   });
 }
+  function sanitizeInput(str) {
+  return str
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;")
+    .replace(/\//g, "&#x2F;");
+}
+
 
 window.onload = init;
 
